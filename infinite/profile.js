@@ -25,7 +25,14 @@ function Profile(isOnline, user, image) {
    this.image = image;
 
    this.username = this.isOnline ? this.user.name : this.user;
-   this.url = Config.avatarurl || '';
+   if (Config.avatarurl.slice(0,6) === 'http://' || Config.avatarurl.slice(0,7) === 'https://') {
+      this.url = Config.avatarurl;
+   } else if (typeof Config.avatarurl === 'undefined') {
+      this.url = '';
+   } else {
+      this.url = 'http://' + Config.avatarurl;
+   }
+   
 }
 
 /**
