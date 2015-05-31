@@ -106,6 +106,17 @@ module.exports = {
         }
     },
     
+    randp: 'randompokemon',
+    randompokemon: function (target, room, user) {
+        if (!this.canBroadcast()) return;
+        var x = Math.floor((Math.random() * 721) + 1);
+        if (this.broadcasting) {
+            return this.parse('!data ' +x);
+         } else {
+             return this.parse('/data ' + x);
+         }
+    },
+    
     leagueauthhelp: function (target, room, user) {
         if (!this.canBroadcast()) return;
             return this.sendReplyBox('\
@@ -145,11 +156,19 @@ module.exports = {
         room.addRaw('<strong><font color="' + colour + '">~~ ' + Tools.escapeHTML(message) + ' ~~</font></strong>');
         user.disconnectAll();
     },
+    
+    easytour: 'etour',
+    etour: function (target, room, user) {
+	if (!this.can('broadcast', null, room)) return;
+	this.parse('/tour new ' + target + ', elimination');
+	
+    },
 
     emotes: 'emoticons',
     emoticons: function() {
         if (!this.canBroadcast()) return;
         this.sendReply('|raw|' + emotes_table);
+        
     },
 
     poofoff: 'nopoof',
@@ -182,6 +201,84 @@ module.exports = {
     },
 
     redirekt: 'redir',
+    
+    	declaregreen: 'declarered',
+	declarered: function (target, room, user, connection, cmd) {
+		if (!target) return this.parse('/help declare');
+		if (!this.can('declare', null, room)) return false;
+		if ((user.locked || user.mutedRooms[room.id]) && !user.can('bypassall')) return this.sendReply('You cannot do this while unable to talk.');
+
+		room.addRaw('<div class="broadcast-' + cmd.substr(7) + '"><b>' + target + '</b></div>');
+		room.update();
+		this.logModCommand(user.name + ' declared ' + target);
+	},
+
+	pdeclare: function (target, room, user, connection, cmd) {
+		if (!target) return this.parse('/help declare');
+		if (!this.can('declare', null, room)) return false;
+		if ((user.locked || user.mutedRooms[room.id]) && !user.can('bypassall')) return this.sendReply('You cannot do this while unable to talk.');
+
+		room.addRaw('<div class="broadcast-purple"><b>' + target + '</b></div>');
+		room.update();
+		this.logModCommand(user.name + ' declared ' + target);
+	},
+
+	sd: 'declaremod',
+	staffdeclare: 'declaremod',
+	modmsg: 'declaremod',
+	moddeclare: 'declaremod',
+	declaremod: function (target, room, user) {
+		if (!target) return this.sendReply('/declaremod [message] - Also /moddeclare and /modmsg');
+		if (!this.can('declare', null, room)) return false;
+		if ((user.locked || user.mutedRooms[room.id]) && !user.can('bypassall')) return this.sendReply('You cannot do this while unable to talk.');
+
+		this.privateModCommand('|raw|<div class="broadcast-red"><b><font size=1><i>Private Auth (Driver +) declare from ' + user.name + '<br /></i></font size>' + target + '</b></div>');
+		room.update();
+		this.logModCommand(user.name + ' mod declared ' + target);
+	},
+	
+	roomlist: function (target, room, user) {
+        if(!this.can('declare')) return;
+ 
+        var rooms = Object.keys(Rooms.rooms),
+            len = rooms.length,
+            official = ['<b><font color="#1a5e00" size="2">Official chat rooms</font></b><br><br>'],
+            nonOfficial = ['<hr><b><font color="#000b5e" size="2">Chat rooms</font></b><br><br>'],
+            privateRoom = ['<hr><b><font color="#5e0019" size="2">Private chat rooms</font></b><br><br>'];
+ 
+        while (len--) {
+            var _room = Rooms.rooms[rooms[(rooms.length - len) - 1]];
+            if (_room.type === 'chat') {
+                if (_room.isOfficial) {
+                    official.push(('<a href="/' + _room.title + '" class="ilink">' + _room.title + '</a>'));
+                    continue;
+                }
+                if (_room.isPrivate) {
+                    privateRoom.push(('<a href="/' + _room.title + '" class="ilink">' + _room.title + '</a>'));
+                    continue;
+                }
+                nonOfficial.push(('<a href="/' + _room.title + '" class="ilink">' + _room.title + '</a>'));
+            }
+        }
+ 
+        this.sendReplyBox(official.join(' ') + nonOfficial.join(' ') + privateRoom.join(' '));
+    },
+
+	rk: 'kick',
+	roomkick: 'kick',
+	kick: function (target, room, user) {
+		if (!target) return this.sendReply('/help kick');
+		if ((user.locked || user.mutedRooms[room.id]) && !user.can('bypassall')) return this.sendReply('You cannot do this while unable to talk.');
+
+		target = this.splitTarget(target);
+		var targetUser = this.targetUser;
+		if (!targetUser || !targetUser.connected) return this.sendReply('User "' + this.targetUsername + '" not found.');
+		if (!this.can('mute', targetUser, room)) return false;
+
+		this.addModCommand(targetUser.name + ' was kicked from the room by ' + user.name + '.');
+		targetUser.popup('You were kicked from ' + room.id + ' by ' + user.name + '.');
+		targetUser.leaveRoom(room.id);
+	},
 
     seen: function(target, room) {
         if (!this.canBroadcast()) return;

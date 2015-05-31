@@ -7,11 +7,12 @@ var shop = [
     ['Symbol', 'Buys a custom symbol to go infront of name and puts you at top of userlist. (Temporary until restart, certain symbols are blocked)', 5],
     ['Fix', 'Buys the ability to alter your current custom avatar or trainer card. (don\'t buy if you have neither)', 10],
     ['Avatar', 'Buys an custom avatar to be applied to your name (You supply. Images larger than 80x80 may not show correctly)', 20],
+    ['League Room', 'Purchases a room at a reduced rate for use with a league.  A roster must be supplied with at least 10 members for this room.', 25],
     ['Trainer', 'Buys a trainer card which shows information through a command. (You supply, can be refused)', 40],
     ['Staff Help', 'Staff member will help set up roomintros and anything else needed in a room. Response may not be immediate.', 50],
     ['League Shop', 'Purchases a League Shop for use in your league room, room must be a league room.', 75],
     ['Room', 'Buys a chatroom for you to own. (within reason, can be refused)', 100],
-    ['Custom Artwork', 'Buys Elite Four Mitsaki\'s time.  The price may vary based on what\'s being done, but avatars, symbols, banners, etc.', 150]
+    ['Custom Artwork', 'Buys Elite Four Mitsaki\'s Artwork. The price may vary based on what\'s being done, but avatars, symbols, banners, etc. If you\'re a cancerous twat she may refuse.', 150]
 ];
 
 function logMoney (message) {
@@ -109,7 +110,7 @@ module.exports = {
             })
             .spread(function(targetTotal, userTotal) {
                 self.sendReply('You have successfully transferred ' + currency + '. You now have ' + userTotal + Economy.currency(userTotal) + '.');
-                logMoney(user.name + ' transferred ' + currency + ' to ' + this.targetUsername + '.');
+                logMoney(user.name + ' transferred ' + currency + ' to ' + targetName + '.');
                 if (Users.get(targetName)) {
                     Users.get(targetName).connections[0].sendTo(room.id, user.name + ' has transferred ' + currency + '. You now have ' + targetTotal + Economy.currency(targetTotal) + '.');
                 }
@@ -143,7 +144,7 @@ module.exports = {
     },
 
     customsymbol: function(target, room, user) {
-        if (!user.canCustomSymbol) return this.sendReply('You need to buy this item from the shop.');
+        if (!user.canCustomSymbol && user.vip && userid !== user.userid) return this.sendReply('You need to buy this item from the shop.');
         if (!target || target.length > 1) return this.sendReply('/customsymbol [symbol] - Get a custom symbol.');
         if (target.match(/[A-Za-z\d]+/g) || '?!+%@\u2605&~#'.indexOf(target) >= 0) return this.sendReply('Sorry, but you cannot change your symbol to this for safety/stability reasons.');
         user.customSymbol = target;
@@ -226,6 +227,7 @@ module.exports = {
 	 				targetRoom.shopList = new Array();
 					targetRoom.chatRoomData.shop = targetRoom.shop;
 					targetRoom.chatRoomData.shopList = targetRoom.shopList;
+					targetRoom.hasShop = true;
 					Rooms.global.writeChatRoomData();
     },
 
@@ -252,6 +254,9 @@ module.exports = {
     },
     
     moneylog: function(target,room,user) {
+	var cmdParts = target.split(' ');
+	var cmd = cmdParts.shift().trim().toLowerCase();
+	var params = cmdParts.join(' ').split(',').map(function (param) { return param.trim(); });
     	var target = params.shift();
 				var lines = 0;
 				if (!target.match('[^0-9]')) {
@@ -308,9 +313,9 @@ function getShopDisplay(shop) {
     var start = 0;
     while (start < shop.length) {
         display += '<tr>\
-                        <td><button name="send" value="/buy ' + shop[start][0] + '">' + shop[start][0] + '</button>' + '</td>\
-                        <td>' + shop[start][1] + '</td>\
-                        <td>' + shop[start][2] + '</td>\
+                        <td align="center"><button name="send" value="/buy ' + shop[start][0] + '"><b>' + shop[start][0] + '</b></button>' + '</td>\
+                        <td align="center">' + shop[start][1] + '</td>\
+                        <td align="center">' + shop[start][2] + '</td>\
                     </tr>';
         start++;
     }

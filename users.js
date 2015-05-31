@@ -251,7 +251,7 @@ Users.socketConnect = function (worker, workerid, socketid, ip) {
 		} else if (checkResult === '#cflood') {
 			connection.send("|popup|PS is under heavy load and cannot accommodate your connection right now.");
 		} else {
-			connection.send("|popup|Your IP (" + ip + ") used is banned under the username '" + checkResult + "'. Your ban will expire in a few days.||" + (Config.appealurl ? " Or you can appeal at:\n" + Config.appealurl : ""));
+			connection.send("|popup|Your IP (" + ip + ") used was banned while using the username '" + checkResult + "'. Your ban will expire in a few days.||" + (Config.appealurl ? " Or you can appeal at:\n" + Config.appealurl : ""));
 		}
 		return connection.destroy();
 	}
@@ -585,6 +585,7 @@ User = (function () {
 				if (room.auth[this.userid]) {
 					return room.auth[this.userid] + this.name;
 				}
+				if (room.autorank) return room.autorank + this.name + (this.awayName || '');
 				if (room.isPrivate === true) return ' ' + this.name;
 			}
 		}
@@ -727,14 +728,14 @@ User = (function () {
 
 		if (registered && userid in bannedUsers) {
 			var bannedUnder = '';
-			if (bannedUsers[userid] !== userid) bannedUnder = ' under the username ' + bannedUsers[userid];
+			if (bannedUsers[userid] !== userid) bannedUnder = ' because of rule-breaking by your alt account ' + bannedUsers[userid];
 			this.send("|popup|Your username (" + name + ") is banned" + bannedUnder + "'. Your ban will expire in a few days." + (Config.appealurl ? " Or you can appeal at:\n" + Config.appealurl : ""));
 			this.ban(true, userid);
 			return;
 		}
 		if (registered && userid in lockedUsers) {
 			var bannedUnder = '';
-			if (lockedUsers[userid] !== userid) bannedUnder = ' under the username ' + lockedUsers[userid];
+			if (lockedUsers[userid] !== userid) bannedUnder = ' because of rule-breaking by your alt account ' + lockedUsers[userid];
 			this.send("|popup|Your username (" + name + ") is locked" + bannedUnder + "'. Your lock will expire in a few days." + (Config.appealurl ? " Or you can appeal at:\n" + Config.appealurl : ""));
 			this.lock(true, userid);
 		}
@@ -1381,8 +1382,8 @@ User = (function () {
 		for (var ip in this.ips) {
 			lockedIps[ip] = userid;
 		}
-		if (this.autoconfirmed) lockedUsers[this.autoconfirmed] = this.userid;
-		if (this.registered) lockedUsers[this.userid] = this.userid;
+		if (this.autoconfirmed) lockedUsers[this.autoconfirmed] = userid;
+		if (this.registered) lockedUsers[this.userid] = userid;
 		this.locked = userid;
 		this.autoconfirmed = '';
 		this.updateIdentity();
