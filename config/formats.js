@@ -5,7 +5,13 @@ exports.Formats = [
 
 	// XY Singles
 	///////////////////////////////////////////////////////////////////
-
+	{
+        name: "Linked",
+ 
+        mod: 'linked',
+        ruleset: ['OU']
+		
+	},
 	{
 		name: "Random Battle",
 		section: "ORAS Singles",
